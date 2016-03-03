@@ -19,31 +19,16 @@ class DataSource(val dsp: DataSourceParams)
     // read all events of EVENT involving ENTITY_TYPE and TARGET_ENTITY_TYPE
     val eventsRDD: RDD[Event] = PEventStore.find(
       appName = dsp.appName,
-      entityType = Some("customer"),
-      eventNames = Some(List("customer")))(sc)
+      entityType = Some("jobs"),
+      eventNames = Some(List("jobs")))(sc)
 
-    val customersRDD: RDD[Customer] = eventsRDD.map { event =>
+    val customersRDD: RDD[Job] = eventsRDD.map { event =>
       val customer = try {
         event.event match {
-          case "customer" =>
-            Customer(Some(event.entityId),
-              Some(event.properties.get[Boolean]("intl_plan")),
-              Some(event.properties.get[Boolean]("voice_mail_plan")),
-              Some(event.properties.get[Long]("num_vmail_msg")),
-              Some(event.properties.get[Double]("total_day_mins")),
-              Some(event.properties.get[Long]("total_day_calls")),
-              Some(event.properties.get[Double]("total_day_charge")),
-              Some(event.properties.get[Double]("total_eve_mins")),
-              Some(event.properties.get[Long]("total_eve_calls")),
-              Some(event.properties.get[Double]("total_eve_charge")),
-              Some(event.properties.get[Double]("total_night_mins")),
-              Some(event.properties.get[Long]("total_night_calls")),
-              Some(event.properties.get[Double]("total_night_charge")),
-              Some(event.properties.get[Double]("total_intl_mins")),
-              Some(event.properties.get[Long]("total_intl_calls")),
-              Some(event.properties.get[Double]("total_intl_charge")),
-              Some(event.properties.get[Long]("customer_service_calls")),
-              Some(event.properties.get[Boolean]("churn")))
+          case "jobs" =>
+            Job(Some(event.entityId),
+              Some(event.properties.get[String]("jobTitle")),
+              Some(event.properties.get[String]("category")))
           case _ => throw new Exception(s"Unexpected event ${event} is read.")
         }
       } catch {
@@ -59,31 +44,15 @@ class DataSource(val dsp: DataSourceParams)
   }
 }
 
-@SerialVersionUID(9129684718267757690L) case class Customer(
+@SerialVersionUID(9129684718267757690L) case class Job(
                                                              id: Option[String],
-                                                             intlPlan: Option[Boolean],
-                                                             voiceMailPlan: Option[Boolean],
-                                                             numVmailMsg: Option[Long],
-                                                             totalDayMins: Option[Double],
-                                                             totalDayCalls: Option[Long],
-                                                             totalDayCharge: Option[Double],
-                                                             totalEveMins: Option[Double],
-                                                             totalEveCalls: Option[Long],
-                                                             totalEveCharge: Option[Double],
-                                                             totalNightMins: Option[Double],
-                                                             totalNightCalls: Option[Long],
-                                                             totalNightCharge: Option[Double],
-                                                             totalIntlMins: Option[Double],
-                                                             totalIntlCalls: Option[Long],
-                                                             totalIntlCharge: Option[Double],
-                                                             customerServiceCalls: Option[Long],
-                                                             churn: Option[Boolean]
-                                                             ) extends Serializable
+                                                             jobTitle: Option[String],
+                                                             category: Option[String]) extends Serializable
 
 class TrainingData(
-                    val customers: RDD[Customer]
+                    val jobs: RDD[Job]
                     ) extends Serializable {
   override def toString = {
-    s"customers: [${customers.count()}] (${customers.take(2).toList}...)"
+    s"jobs: [${jobs.count()}] (${jobs.take(2).toList}...)"
   }
 }
