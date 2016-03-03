@@ -4,7 +4,7 @@
   "engineFactory": "VanillaEngine",
   "datasource": {
     "params" : {
-      "appName": "INVALID_APPNAME"
+      "appName": "craft"
     }
   },
   "algorithms": [

@@ -1,8 +1,16 @@
 import grizzled.slf4j.Logger
 import hex.deeplearning.{DeepLearning, DeepLearningModel, DeepLearningParameters}
 import io.prediction.controller.{IPersistentModel, P2LAlgorithm, Params}
-import org.apache.spark.SparkContext
+
+import hex.Model
+import hex.Model.Output
 import org.apache.spark.h2o._
+import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.{SparkContext, mllib}
+import water.app.{GBMSupport, ModelMetricsSupport, SparkContextSupport, SparklingWaterApp}
 
 case class AlgorithmParams(epochs: Int) extends Params
 
