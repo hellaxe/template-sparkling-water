@@ -36,6 +36,11 @@ class Algorithm(val ap: AlgorithmParams)
     val h2oContext = new H2OContext(sc).start()
     import h2oContext._
 
+    
+    val tokenizedRdd = data.jobs.map(d => (d(0), tokenize(d(1), STOP_WORDS)))
+    val words = tokenizedRdd.map(r => r._2.toSeq)
+    val w2vModel = new Word2Vec().fit(words)
+
     val result = new H2OFrame(data.jobs)
 
     val dlParams: DeepLearningParameters = new DeepLearningParameters()
@@ -60,9 +65,7 @@ class Algorithm(val ap: AlgorithmParams)
     // dlParams._response_column = 'churn
     // dlParams._epochs = ap.epochs
 
-    val dl: DeepLearning = new DeepLearning(dlParams)
-    val dlModel: DeepLearningModel = dl.trainModel.get
-    new Model(dlModel = dlModel, sc = sc, h2oContext = h2oContext)
+    new Model(v2wModel = v2wModel, sc = sc, h2oContext = h2oContext)
   }
 
   def predict(model: Model, query: Query): PredictedResult = {
@@ -146,22 +149,22 @@ class Algorithm(val ap: AlgorithmParams)
   //   rareWords
   // }
 
-  // private def tokenize(line: String, stopWords: Set[String]) = {
-  //   //get rid of nonWords such as punctuation as opposed to splitting by just " "
-  //   line.split("""\W+""")
-  //     // Unify
-  //     .map(_.toLowerCase)
+  private def tokenize(line: String, stopWords: Set[String]) = {
+    //get rid of nonWords such as punctuation as opposed to splitting by just " "
+    line.split("""\W+""")
+      // Unify
+      .map(_.toLowerCase)
 
-  //     //remove mix of words+numbers
-  //     .filter(word => ! (word exists Character.isDigit) )
+      //remove mix of words+numbers
+      .filter(word => ! (word exists Character.isDigit) )
 
-  //     //remove stopwords defined above (you can add to this list if you want)
-  //     .filterNot(word => stopWords.contains(word))
+      //remove stopwords defined above (you can add to this list if you want)
+      .filterNot(word => stopWords.contains(word))
 
-  //     //leave only words greater than 1 characters.
-  //     //this deletes A LOT of words but useful to reduce our feature-set
-  //     .filter(word => word.size >= 2)
-  // }
+      //leave only words greater than 1 characters.
+      //this deletes A LOT of words but useful to reduce our feature-set
+      .filter(word => word.size >= 2)
+  }
 
 
 
@@ -187,7 +190,7 @@ class Algorithm(val ap: AlgorithmParams)
 // case class JobOffer(category: String, fv: mllib.linalg.Vector)
 case class Input(jobTitle: Option[String])
 
-class Model(val dlModel: DeepLearningModel, val sc: SparkContext,
+class Model(val w2vModel: Word2VecModel, val sc: SparkContext,
             val h2oContext: H2OContext)
   extends IPersistentModel[AlgorithmParams] {
 
